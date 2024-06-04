@@ -1,12 +1,280 @@
+:root {
+    --primary-bg: #D9D9D9;
+    --secondary-bg: #F0EFEF;
+    --card-bg: #FFFFFF;
+    --header-text-color: #004D40;
+    --placeholder-text-color: #CBBFBF;
+    --task-text-color: #43786F;
+    --border-color: #E3E3E3;
+    --highlight-color: #939393;
+    --shadow-color: #C7C7C7;
+}
 
-/* 
+.theme-dark {
+    --primary-bg: #121212;
+    --secondary-bg: #1E1E1E;
+    --card-bg: #455A64;
+    --header-text-color: #E0E0E0;
+    --placeholder-text-color: #4e6775;
+    --task-text-color: #B0BEC5;
+    --border-color: #8fa0aa5c;
+    --highlight-color: #B0BEC5;
+    --shadow-color: #0F0F0F;
+}
 
-    You can write your own styles here...
-    
-    
-    ...Or you can use the import command to include 
-    other sylesheets into your bunde as well, e.j:
-    
-    import 'relative/path/to/stylesheet.scss';
+body {
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+    font-variation-settings: "slnt" 0;
+}
 
-*/
+.container {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+}
+
+.background {
+    position: absolute;
+    width: 100vw;
+    top: 0;
+    left: 0;
+}
+
+.upperColor {
+    height: 30%;
+    background-color: var(--primary-bg);
+}
+
+.lowerColor {
+    height: 70%;
+    background-color: var(--secondary-bg);
+    top: 30%;
+}
+
+.content {
+    position: relative;
+    z-index: 10;
+    padding: 20px;
+    width: 100vw;
+}
+
+.toggleTheme {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.2rem;
+    margin: 0;
+    padding: 0;
+    float: right;
+    color: var(--header-text-color);
+}
+
+i {
+    padding-left: 0.5em;
+}
+
+i:hover {
+    transform: scale(1.1);
+}
+
+.todoContainer {
+    height: 90vh;
+    width: 95%;
+    margin: 0 auto;
+    padding: 0.2em;
+    margin-top: 0.5em;
+    text-align: center;
+}
+
+.appHeader {
+    color: var(--header-text-color);
+    font-size: 2rem;
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+.taskInput {
+    padding: 1em;
+    width: 100%;
+    border: #004D40;
+    background-color: var(--card-bg);
+    height: 5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 10px var(--shadow-color);
+    border-radius: 0.3em;
+}
+
+.taskInput>.checkMark i,
+.unchecked {
+    color: var(--card-bg);
+    font-size: 2em;
+    margin: 0;
+    padding: 0;
+    border: 3px solid var(--border-color);
+    border-radius: 50%;
+    
+}
+
+.completed {
+    color: var(--border-color);
+    font-size: 2.3em;
+    margin: 0;
+    padding: 0;
+}
+
+.taskInput .inputBox,
+.task .inputBox {
+    flex: 1;
+    padding-left: 1em;
+}
+
+.taskInput input,
+.task input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 1.5rem;
+    color: var(--task-text-color);
+    background-color: var(--card-bg);
+}
+
+.taskInput input::placeholder {
+    color: var(--placeholder-text-color);
+}
+
+.tasksContainer {
+    border-radius: 0.3em;
+    position: relative;
+    top: 8%;
+    width: 100%;
+    background-color: var(--card-bg);
+    box-shadow: 0 8px 10px var(--shadow-color);
+}
+
+.task {
+    padding: 1em;
+    width: 100%;
+    border: #004D40;
+    background-color: var(--card-bg);
+    height: 5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.2em solid var(--border-color);
+}
+
+.task input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 1.5rem;
+    color: var(--task-text-color);
+    background-color: var(--card-bg);
+}
+
+.task>.trashCan i {
+    color: var(--border-color);
+    font-size: 1.5em;
+    margin: 0;
+    padding: 0;
+}
+
+.taskInput .addTask i {
+    color: var(--border-color);
+    font-size: 1.5em;
+    margin: 0;
+    padding: 0;
+}
+
+.task:first-child {
+    border: none;
+    border-radius: 0.3em 0.3em 0 0;
+}
+
+.task:last-child {
+    border-bottom: 0.2em solid var(--border-color);
+}
+
+.footer {
+    border-top: 0.1em solid var(--border-color);
+    margin: 0 0 0 0;
+    padding: 0.4em;
+    color: var(--task-text-color);
+    font-size: 0.7em;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul li {
+    margin: 0;
+    /* Optionally removes margins from list items if needed */
+    padding: 0;
+    /* Optionally removes padding from list items if needed */
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.filters {
+    display: flex;
+    gap: 1em;
+}
+
+.footerButton {
+    background: none;
+    color: inherit;
+    border: none;
+    font: inherit;
+    padding: 0;
+    cursor: pointer;
+    outline: inherit;
+}
+
+.footerButton:hover {
+    text-decoration: underline;
+}
+
+.active-filter {
+    font-weight: bold;
+}
+
+@media (min-width: 768px) {
+    .todoContainer {
+        width: 70%;
+    }
+
+    .appHeader {
+        font-size: 2.5rem;
+    }
+
+    .footer {
+        font-size: 1.2em;
+    }
+}
+
+@media (min-width: 1720px) {
+    .todoContainer {
+        width: 30%;
+    }
+
+    .appHeader {
+        font-size: 3rem;
+    }
+
+    .footer {
+        font-size: 1.2em;
+    }
+}
