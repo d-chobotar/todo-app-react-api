@@ -1,17 +1,59 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Task } from "./Task";
+import { fetchTasks, updateTask, createTask, deleteTask, createUser } from "../apiClient";
+import { mapTaskData, mapTaskToApiFormat } from "../transformers";
 
 export const TodoContainer = () => {
+    const USERNAME = 'dchobotar';
     const [input, setInput] = useState('');
     const [tasks, setTasks] = useState([]);
     const [filter, setFilter] = useState('all');
+
+
+    useEffect(() => {
+        const initializeTasks = async () => {
+            try {
+                let fetchedTasksResponse = await fetchTasks(USERNAME);
+                if(fetchedTasksResponse.status === 404){
+                    await createUser(USERNAME);
+                    const newTask = { isCompleted: false, val: 'Initial task - delete it!' };
+                    createTaskApiSyncUi(newTask);
+                    fetchedTasksResponse = await fetchTasks(USERNAME);
+                }
+                console.log(fetchedTasksResponse.data.todos)
+                if(fetchedTasksResponse.data.todos.length === 0){
+                    const newTask = { isCompleted: false, val: 'Initial task - delete it!' };
+                    createTaskApiSyncUi(newTask);
+                }
+
+                setTasks(mapTaskData(fetchedTasksResponse.data.todos));
+                console.log('Tasks have been fetched', fetchedTasksResponse);
+            } catch (error) {
+                console.error('Failed to initialize tasks:', error);
+            };
+        }
+        initializeTasks();
+    }, []);
+
+    const createTaskApiSyncUi = async (newTask) => {
+        try {
+            const createResponse = await createTask(USERNAME, mapTaskToApiFormat(newTask));
+            console.log('New task has been created with status: ', createResponse);
+            if (createResponse.status === 201) {
+                const taskWithId = {...newTask, id: createResponse.data.id};
+                setTasks(prevTasks => [...prevTasks, taskWithId]);
+            }
+        } catch (error) {
+            console.error('Error creating a new task:', error);
+        }
+    }
 
     const handleTaskInput = (event) => {
         if (event.key === 'Enter') {
             if (input.trim() !== '') {
                 event.preventDefault();
                 const newTask = { isCompleted: false, val: input };
-                setTasks(prevTasks => [...prevTasks, newTask]);
+                createTaskApiSyncUi(newTask);
                 setInput('');
             } else {
                 setInput('Enter the task in order to add it.');
@@ -22,26 +64,59 @@ export const TodoContainer = () => {
     const addTask = () => {
         if (input.trim() !== '') {
             const newTask = { isCompleted: false, val: input };
-            setTasks(prevTasks => [...prevTasks, newTask]);
+            createTaskApiSyncUi(newTask);
             setInput('');
         }
     }
 
-    const clickTrashHandler = (index) => {
-        setTasks(prevTasks => prevTasks.filter((_, idx) => idx !== index))
+    const completeHandler = (index) => {
+        const taskToUpdate = tasks[index];
+        const updatedTask = { ...taskToUpdate, isCompleted: !taskToUpdate.isCompleted };
+
+        const markCompleteTaskApi = async () => {
+            try {
+                const updateResponse = await updateTask(taskToUpdate.id, mapTaskToApiFormat(updatedTask));
+                console.log('Marking task as completed: ', updateResponse)
+                if (updateResponse && updateResponse.status === 200) {
+                    setTasks(prevTasks => prevTasks.map((task, idx) => {
+                        if (idx === index) {
+                            return { ...task, isCompleted: !task.isCompleted };
+                        }
+                        return task;
+                    }));
+                } else {
+                    console.log('Failed to mark task as completed:', updateResponse.status);
+                }
+
+            } catch (error) {
+                console.log('Error while updating a task', error);
+            }
+        }
+
+        markCompleteTaskApi();
     }
 
-    const completeHandler = (index) => {
-        setTasks(prevTasks =>
-                prevTasks.map((task, idx) => {
-                    if(idx === index){
-                        console.log("Toggling completion for task:", task);
-                        return {...task, isCompleted: !task.isCompleted};
-                    }
-                    return task;
+    const clickTrashHandler = (index) => {
+        const taskToDelete = tasks[index];
+        console.log('index: ', tasks[index], taskToDelete);
+        const deleteTaskAndUpdateUi = async () => {
+            try {
+                console.log('task id: ', taskToDelete.id);
+                const deleteResponse = await deleteTask(taskToDelete.id);
+                console.log('Deleted the task ', deleteResponse)
+                if (deleteResponse.status === 204) {
+                    setTasks(prevTasks => {
+                        const newTasks = prevTasks.filter((_, idx) => idx !== index);
+                        console.log('New tasks array after deletion: ', newTasks);
+                        return newTasks;
+                    });
+
                 }
-            )
-        );
+            } catch (error) {
+                console.log('Error in deleting a task', error);
+            }
+        };
+        deleteTaskAndUpdateUi();
     }
 
     const filteredTasks = () => {
@@ -53,18 +128,6 @@ export const TodoContainer = () => {
             default:
                 return tasks;
         }
-    }
-
-    const showAllHandler = () => {
-        setTasks(prevTasks => [...prevTasks]);
-    }
-
-    const showActiveHandler = () => {
-        setTasks(prevTasks => prevTasks.filter((task) => !task.isCompleted));
-    }
-
-    const showCompletedHandler = () => {
-        setTasks(prevTasks => prevTasks.filter((task) => task.isCompleted));
     }
 
     return (
@@ -93,13 +156,13 @@ export const TodoContainer = () => {
 
             <div className="tasksContainer">
                 <ul>
-                    {filteredTasks().map((task, idx) => (
-                        <li key={idx}>
+                    {filteredTasks().map((task) => (
+                        <li key={task.id}>
                             <Task
                                 remove={clickTrashHandler}
                                 markComplete={completeHandler}
                                 taskObj={task}
-                                index={idx}
+                                index={tasks.indexOf(task)}
                                 val={task.val}
                             />
                         </li>
@@ -107,18 +170,18 @@ export const TodoContainer = () => {
                 </ul>
                 <div className="footer d-flex justify-content-between">
                     <div>{tasks.length} tasks left</div>
-                    <div className="filters"> 
-                        <button  
-                            className={`footerButton ${filter === 'all' ? 'active-filter' : ''}`} 
-                            onClick={() => setFilter('all')} 
+                    <div className="filters">
+                        <button
+                            className={`footerButton ${filter === 'all' ? 'active-filter' : ''}`}
+                            onClick={() => setFilter('all')}
                         > All </button>
-                        <button 
-                            className={`footerButton ${filter === 'active' ? 'active-filter' : ''}`} 
-                            onClick={() => setFilter('active')} 
+                        <button
+                            className={`footerButton ${filter === 'active' ? 'active-filter' : ''}`}
+                            onClick={() => setFilter('active')}
                         >Active</button>
-                        <button 
-                            className={`footerButton ${filter === 'completed' ? 'active-filter' : ''}`} 
-                            onClick={() => setFilter('completed')} 
+                        <button
+                            className={`footerButton ${filter === 'completed' ? 'active-filter' : ''}`}
+                            onClick={() => setFilter('completed')}
                         >Completed</button>
                     </div>
                     <button className="footerButton" onClick={() => setTasks(tasks.filter(task => !task.isCompleted))}>Clear Completed</button>
